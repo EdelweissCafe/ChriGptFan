@@ -103,5 +103,135 @@ document.getElementById("langSelect").addEventListener("change", e=>{
 // Αρχικά εμφανίζουμε Καφέδες
 showSection('coffee');
 </script>
+  <!-- Admin Modal -->
+<div id="adminModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); color:#fff; padding:20px; overflow:auto; z-index:1000;">
+  <span id="closeAdmin" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:20px;">&times;</span>
+  <h2 style="text-align:center; color:#f4d47c;">Admin Menu</h2>
+  
+  <label>Επιλογή Ενότητας:</label>
+  <select id="adminSectionSelect"></select>
+
+  <label>Επιλογή Γλώσσας:</label>
+  <select id="adminLangSelect">
+    <option value="GR">Ελληνικά</option>
+    <option value="EN">English</option>
+    <option value="FR">Français</option>
+    <option value="DE">Deutsch</option>
+    <option value="IT">Italiano</option>
+    <option value="ES">Español</option>
+    <option value="RU">Русский</option>
+    <option value="RS">Српски</option>
+    <option value="BG">Български</option>
+    <option value="RO">Română</option>
+    <option value="AL">Shqip</option>
+    <option value="TR">Türkçe</option>
+  </select>
+
+  <table id="adminTable" style="width:100%; border-collapse:collapse; margin-top:10px;">
+    <thead>
+      <tr style="border-bottom:1px solid #444;">
+        <th>Όνομα</th><th>Τιμή</th><th>Δράσεις</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <input id="newProdName" placeholder="Όνομα" style="margin:5px; padding:4px;">
+  <input id="newProdPrice" placeholder="Τιμή" style="margin:5px; padding:4px;">
+  <button id="addProdBtn" style="margin:5px; padding:4px;">Προσθήκη Προϊόντος</button>
+</div>
+
+<script>
+// Admin modal script
+let logoClicks = 0;
+const logo = document.getElementById('logo');
+const adminModal = document.getElementById('adminModal');
+const adminSectionSelect = document.getElementById('adminSectionSelect');
+const adminLangSelect = document.getElementById('adminLangSelect');
+const adminTableBody = document.querySelector('#adminTable tbody');
+const addProdBtn = document.getElementById('addProdBtn');
+const newProdName = document.getElementById('newProdName');
+const newProdPrice = document.getElementById('newProdPrice');
+let currentAdminLang = 'GR';
+
+// 5 click στο logo για admin
+logo.addEventListener('click',()=>{
+  logoClicks++;
+  if(logoClicks>=5){
+    logoClicks=0;
+    const code = prompt("Εισάγετε τον κωδικό admin:");
+    if(code==='1234'){
+      adminModal.style.display='block';
+      populateSectionSelect();
+      populateTable();
+    } else alert("Λανθασμένος κωδικός!");
+  }
+});
+
+// Κλείσιμο modal
+document.getElementById('closeAdmin').addEventListener('click',()=>{adminModal.style.display='none';});
+
+// Populate section select
+function populateSectionSelect(){
+  adminSectionSelect.innerHTML='';
+  Object.keys(menuData).forEach(sec=>{
+    const opt=document.createElement('option');
+    opt.value=sec; opt.text=sec.toUpperCase();
+    adminSectionSelect.appendChild(opt);
+  });
+}
+
+// Populate table
+function populateTable(){
+  const sec = adminSectionSelect.value;
+  currentAdminLang = adminLangSelect.value;
+  adminTableBody.innerHTML='';
+  let items = menuData[sec];
+  if(sec==='icecream'){ // icecream special case
+    items = items.map(i=>({name:i[currentAdminLang], price:"—"}));
+  } else {
+    items = items[currentAdminLang] || [];
+  }
+  items.forEach((item,i)=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `<td contenteditable="true" oninput="updateItem('${sec}',${i},'name',this.innerText)">${item.name}</td>
+                     <td contenteditable="true" oninput="updateItem('${sec}',${i},'price',this.innerText)">${item.price}</td>
+                     <td><button onclick="deleteItem('${sec}',${i})">Διαγραφή</button></td>`;
+    adminTableBody.appendChild(row);
+  });
+}
+
+// Όταν αλλάζει η ενότητα ή η γλώσσα
+adminSectionSelect.addEventListener('change', populateTable);
+adminLangSelect.addEventListener('change', populateTable);
+
+// Update menuData
+window.updateItem = function(sec,i,key,value){
+  if(sec==='icecream'){ menuData[sec][i][currentAdminLang]=value; } 
+  else { menuData[sec][currentAdminLang][i][key]=value; }
+  showSection(sec);
+}
+
+// Delete
+window.deleteItem = function(sec,i){
+  if(sec==='icecream'){ menuData[sec].splice(i,1); } 
+  else { menuData[sec][currentAdminLang].splice(i,1); }
+  populateTable();
+  showSection(sec);
+}
+
+// Add new product
+addProdBtn.addEventListener('click',()=>{
+  const sec = adminSectionSelect.value;
+  const name = newProdName.value.trim();
+  const price = newProdPrice.value.trim() || '—';
+  if(name===''){ alert("Γράψε όνομα προϊόντος"); return; }
+  if(sec==='icecream'){ menuData[sec].push({[currentAdminLang]:name}); } 
+  else { menuData[sec][currentAdminLang].push({name,price}); }
+  newProdName.value=''; newProdPrice.value='';
+  populateTable();
+  showSection(sec);
+});
+  </script>
 </body>
 </html>
