@@ -209,5 +209,141 @@ addProdBtn.addEventListener('click',()=>{
   saveMenu(); newProdName.value=''; newProdPrice.value=''; populateTable(); showSection(sec);
 });
 </script>
+  <script>
+// --- Default menuData (προαιρετικά αν δεν υπάρχει ήδη) ---
+const defaultMenuData = {
+  coffee: { GR:[{name:"Ελληνικός",price:"2.50€",img:"images/filter_coffee.jpg"}], EN:[{name:"Greek Coffee",price:"2.50€",img:"images/filter_coffee.jpg"}], FR:[{name:"Café Grec",price:"2.50€",img:"images/filter_coffee.jpg"}], DE:[{name:"Griechischer Kaffee",price:"2.50€",img:"images/filter_coffee.jpg"}], IT:[{name:"Caffè Greco",price:"2.50€",img:"images/filter_coffee.jpg"}], ES:[{name:"Café Griego",price:"2.50€",img:"images/filter_coffee.jpg"}], RU:[{name:"Греческий кофе",price:"2.50€",img:"images/filter_coffee.jpg"}], RS:[{name:"Grčki Kafa",price:"2.50€",img:"images/filter_coffee.jpg"}], BG:[{name:"Гръцко кафе",price:"2.50€",img:"images/filter_coffee.jpg"}], RO:[{name:"Cafea grecească",price:"2.50€",img:"images/filter_coffee.jpg"}], AL:[{name:"Kafe Grek",price:"2.50€",img:"images/filter_coffee.jpg"}], TR:[{name:"Yunan Kahvesi",price:"2.50€",img:"images/filter_coffee.jpg"}] },
+  beverages: { GR:[{name:"Σοκολάτα Ζεστή/Κρύα",price:"3.00€",img:"images/chocolate.jpg"}], EN:[{name:"Hot/Cold Chocolate",price:"3.00€",img:"images/chocolate.jpg"}], FR:[{name:"Chocolat Chaud/Froid",price:"3.00€",img:"images/chocolate.jpg"}], DE:[{name:"Heiße/Kalte Schokolade",price:"3.00€",img:"images/chocolate.jpg"}], IT:[{name:"Cioccolata Calda/Fredda",price:"3.00€",img:"images/chocolate.jpg"}], ES:[{name:"Chocolate Caliente/Frío",price:"3.00€",img:"images/chocolate.jpg"}], RU:[{name:"Горячий/Холодный шоколад",price:"3.00€",img:"images/chocolate.jpg"}], RS:[{name:"Topla/hladna čokolada",price:"3.00€",img:"images/chocolate.jpg"}], BG:[{name:"Горещ/Студен шоколад",price:"3.00€",img:"images/chocolate.jpg"}], RO:[{name:"Ciocolată caldă/rece",price:"3.00€",img:"images/chocolate.jpg"}], AL:[{name:"Cokolatë e ngrohtë/freskët",price:"3.00€",img:"images/chocolate.jpg"}], TR:[{name:"Sıcak/Soğuk Çikolata",price:"3.00€",img:"images/chocolate.jpg"}] },
+  icecream: Array.from({length:10},(_,i)=>({
+    GR:"Γεύση "+(i+1), EN:"Flavor "+(i+1), FR:"Saveur "+(i+1), DE:"Geschmack "+(i+1), IT:"Gusto "+(i+1),
+    ES:"Sabor "+(i+1), RU:"Вкус "+(i+1), RS:"Ukus "+(i+1), BG:"Вкус "+(i+1), RO:"Gust "+(i+1), AL:"Shije "+(i+1), TR:"Tat "+(i+1), img:"images/icecream"+(i+1)+".jpg"
+  }))
+};
+
+// --- LocalStorage setup ---
+const STORAGE_KEY = 'edelweissMenuData';
+let savedData = localStorage.getItem(STORAGE_KEY);
+let menuData = savedData ? JSON.parse(savedData) : JSON.parse(JSON.stringify(defaultMenuData));
+function saveMenu(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(menuData)); }
+
+// --- Menu display ---
+let currentLanguage = 'GR';
+const langSelect = document.getElementById('langSelect');
+langSelect.addEventListener('change',()=>{ currentLanguage = langSelect.value; showSection('coffee'); });
+
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  const sec = document.getElementById(id);
+  let items = menuData[id];
+  if(id==='icecream'){ items = items.map(i=>({name:i[currentLanguage], price:"—", img:i.img || ""})); }
+  else { items = items[currentLanguage] || []; }
+
+  sec.innerHTML = items.map(item=>`
+    <div class="item" style="display:flex; align-items:center; margin-bottom:5px;">
+      ${item.img ? `<img src="${item.img}" style="width:50px; height:50px; object-fit:cover; margin-right:10px; border-radius:5px;">` : ''}
+      <span style="flex:1;">${item.name}</span>
+      <span class="price">${item.price}</span>
+    </div>
+  `).join('');
+
+  sec.style.display='block';
+}
+
+// αρχικά Καφέδες
+showSection('coffee');
+
+// --- Admin modal ---
+let logoClicks = 0;
+const logo = document.getElementById('logo');
+const adminModal = document.getElementById('adminModal');
+const adminSectionSelect = document.getElementById('adminSectionSelect');
+const adminLangSelect = document.getElementById('adminLangSelect');
+const adminTableBody = document.querySelector('#adminTable tbody');
+const addProdBtn = document.getElementById('addProdBtn');
+const newProdName = document.getElementById('newProdName');
+const newProdPrice = document.getElementById('newProdPrice');
+const newProdImg = document.getElementById('newProdImg');
+let currentAdminLang = 'GR';
+
+logo.addEventListener('click',()=>{
+  logoClicks++;
+  if(logoClicks>=5){
+    logoClicks=0;
+    const code = prompt("Εισάγετε τον κωδικό admin:");
+    if(code==='1234'){ adminModal.style.display='block'; populateSectionSelect(); populateTable(); }
+    else alert("Λανθασμένος κωδικός!");
+  }
+});
+
+document.getElementById('closeAdmin').addEventListener('click',()=>{adminModal.style.display='none';});
+
+function populateSectionSelect(){
+  adminSectionSelect.innerHTML='';
+  Object.keys(menuData).forEach(sec=>{
+    const opt=document.createElement('option'); opt.value=sec; opt.text=sec.toUpperCase();
+    adminSectionSelect.appendChild(opt);
+  });
+}
+
+function populateTable(){
+  const sec = adminSectionSelect.value;
+  currentAdminLang = adminLangSelect.value;
+  adminTableBody.innerHTML='';
+  let items = menuData[sec];
+  if(sec==='icecream'){ items = items.map(i=>({name:i[currentAdminLang], price:"—", img:i.img || ""})); }
+  else { items = items[currentAdminLang] || []; }
+  items.forEach((item,i)=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td contenteditable="true" oninput="updateItem('${sec}',${i},'name',this.innerText)">${item.name}</td>
+      <td contenteditable="true" oninput="updateItem('${sec}',${i},'price',this.innerText)">${item.price}</td>
+      <td contenteditable="true" oninput="updateItem('${sec}',${i},'img',this.innerText)">${item.img || ''}</td>
+      <td><button onclick="deleteItem('${sec}',${i})">Διαγραφή</button></td>
+    `;
+    adminTableBody.appendChild(row);
+  });
+}
+
+adminSectionSelect.addEventListener('change', populateTable);
+adminLangSelect.addEventListener('change', populateTable);
+
+window.updateItem = function(sec,i,key,value){
+  if(sec==='icecream'){ menuData[sec][i][key] = value; } 
+  else { menuData[sec][currentAdminLang][i][key] = value; }
+  if(key==='price' || key==='img' && sec!=='icecream'){
+    Object.keys(menuData[sec]).forEach(lang=>{
+      if(lang!==currentAdminLang){
+        menuData[sec][lang][i][key] = value;
+      }
+    });
+  }
+  saveMenu(); showSection(sec);
+}
+
+window.deleteItem = function(sec,i){
+  if(sec==='icecream'){ menuData[sec].splice(i,1); } 
+  else { Object.keys(menuData[sec]).forEach(lang=>menuData[sec][lang].splice(i,1)); }
+  saveMenu(); populateTable(); showSection(sec);
+}
+
+addProdBtn.addEventListener('click',()=>{
+  const sec = adminSectionSelect.value;
+  const name = newProdName.value.trim();
+  const price = newProdPrice.value.trim() || '—';
+  const img = newProdImg.value.trim() || '';
+  if(name===''){ alert("Γράψε όνομα προϊόντος"); return; }
+
+  if(sec==='icecream'){
+    menuData[sec].push({[currentAdminLang]:name, img});
+  } else {
+    Object.keys(menuData[sec]).forEach(lang=>{
+      menuData[sec][lang].push({name: lang===currentAdminLang ? name : '', price, img});
+    });
+  }
+
+  saveMenu(); newProdName.value=''; newProdPrice.value=''; newProdImg.value='';
+  populateTable(); showSection(sec);
+});
+    </script>
 </body>
 </html>
