@@ -233,5 +233,115 @@ addProdBtn.addEventListener('click',()=>{
   showSection(sec);
 });
   </script>
+  <script>
+// --- LocalStorage setup ---
+const STORAGE_KEY = 'edelweissMenuData';
+
+// Φορτώνουμε menuData από LocalStorage ή default
+let savedData = localStorage.getItem(STORAGE_KEY);
+let currentMenuData;
+if(savedData){
+  currentMenuData = JSON.parse(savedData);
+} else {
+  currentMenuData = JSON.parse(JSON.stringify(menuData)); // αντιγραφή default menuData
+}
+
+// Όταν κάνουμε αλλαγές, αποθηκεύουμε στο LocalStorage
+function saveMenu(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(currentMenuData));
+}
+
+// Τροποποιήσεις για admin modal
+let logoClicks = 0;
+const logo = document.getElementById('logo');
+const adminModal = document.getElementById('adminModal');
+const adminSectionSelect = document.getElementById('adminSectionSelect');
+const adminLangSelect = document.getElementById('adminLangSelect');
+const adminTableBody = document.querySelector('#adminTable tbody');
+const addProdBtn = document.getElementById('addProdBtn');
+const newProdName = document.getElementById('newProdName');
+const newProdPrice = document.getElementById('newProdPrice');
+let currentAdminLang = 'GR';
+
+logo.addEventListener('click',()=>{
+  logoClicks++;
+  if(logoClicks>=5){
+    logoClicks=0;
+    const code = prompt("Εισάγετε τον κωδικό admin:");
+    if(code==='1234'){
+      adminModal.style.display='block';
+      populateSectionSelect();
+      populateTable();
+    } else alert("Λανθασμένος κωδικός!");
+  }
+});
+
+document.getElementById('closeAdmin').addEventListener('click',()=>{adminModal.style.display='none';});
+
+// Populate section select
+function populateSectionSelect(){
+  adminSectionSelect.innerHTML='';
+  Object.keys(currentMenuData).forEach(sec=>{
+    const opt=document.createElement('option');
+    opt.value=sec; opt.text=sec.toUpperCase();
+    adminSectionSelect.appendChild(opt);
+  });
+}
+
+// Populate table
+function populateTable(){
+  const sec = adminSectionSelect.value;
+  currentAdminLang = adminLangSelect.value;
+  adminTableBody.innerHTML='';
+  let items = currentMenuData[sec];
+  if(sec==='icecream'){
+    items = items.map(i=>({name:i[currentAdminLang], price:"—"}));
+  } else {
+    items = items[currentAdminLang] || [];
+  }
+  items.forEach((item,i)=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `<td contenteditable="true" oninput="updateItem('${sec}',${i},'name',this.innerText)">${item.name}</td>
+                     <td contenteditable="true" oninput="updateItem('${sec}',${i},'price',this.innerText)">${item.price}</td>
+                     <td><button onclick="deleteItem('${sec}',${i})">Διαγραφή</button></td>`;
+    adminTableBody.appendChild(row);
+  });
+}
+
+// Όταν αλλάζει η ενότητα ή η γλώσσα
+adminSectionSelect.addEventListener('change', populateTable);
+adminLangSelect.addEventListener('change', populateTable);
+
+// Update menuData
+window.updateItem = function(sec,i,key,value){
+  if(sec==='icecream'){ currentMenuData[sec][i][currentAdminLang]=value; } 
+  else { currentMenuData[sec][currentAdminLang][i][key]=value; }
+  saveMenu();
+  showSection(sec);
+}
+
+// Delete
+window.deleteItem = function(sec,i){
+  if(sec==='icecream'){ currentMenuData[sec].splice(i,1); } 
+  else { currentMenuData[sec][currentAdminLang].splice(i,1); }
+  saveMenu();
+  populateTable();
+  showSection(sec);
+}
+
+// Add new product
+addProdBtn.addEventListener('click',()=>{
+  const sec = adminSectionSelect.value;
+  const name = newProdName.value.trim();
+  const price = newProdPrice.value.trim() || '—';
+  if(name===''){ alert("Γράψε όνομα προϊόντος"); return; }
+  if(sec==='icecream'){ currentMenuData[sec].push({[currentAdminLang]:name}); } 
+  else { currentMenuData[sec][currentAdminLang].push({name,price}); }
+  saveMenu();
+  newProdName.value=''; newProdPrice.value='';
+  populateTable();
+  showSection(sec);
+});
+  </script>
 </body>
 </html>
