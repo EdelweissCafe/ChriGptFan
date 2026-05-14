@@ -1,1 +1,104 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edelweiss Café – Menu</title>
+<style>
+body { font-family: Arial; background:#0f0f0f; color:#fff; margin:0; padding:0; }
+header { text-align:center; padding:20px; }
+h1 { color:#f4d47c; font-size:1.8em; margin:0; }
+.section { padding:15px; border-bottom:1px solid #333; }
+.item { display:flex; justify-content:space-between; padding:5px 0; flex-wrap:wrap; }
+.item span { margin:2px 0; }
+.price { color:#f4d47c; font-weight:bold; }
+.tabs { display:flex; overflow-x:auto; padding:5px 0; margin:10px 0; scrollbar-width:none; -ms-overflow-style:none; }
+.tabs::-webkit-scrollbar { display:none; }
+.tabs button { flex:0 0 auto; background:#222; color:#fff; border:1px solid #444; padding:6px 10px; margin:0 3px; border-radius:6px; cursor:pointer; font-size:0.9em; white-space:nowrap; }
+#logo { width:120px; max-width:30%; cursor:pointer; }
+</style>
+</head>
+<body>
 
+<header>
+<img id="logo" src="logo.png" alt="Edelweiss Logo">
+<h1>EDELWEISS CAFÉ</h1>
+</header>
+
+<div class="tabs">
+<button onclick="showSection('coffee')">Καφέδες</button>
+<button onclick="showSection('beverages')">Ροφήματα</button>
+<button onclick="showSection('juices')">Χυμοί</button>
+<button onclick="showSection('smoothies')">Smoothies</button>
+<button onclick="showSection('softdrinks')">Αναψυκτικά</button>
+<button onclick="showSection('sandwiches')">Σάντουιτς</button>
+<button onclick="showSection('breakfast')">Πρωινά</button>
+<button onclick="showSection('salads')">Σαλάτες</button>
+<button onclick="showSection('fastfood')">Fast Food</button>
+<button onclick="showSection('icecream')">Παγωτά</button>
+</div>
+
+<div class="section" id="coffee"></div>
+<div class="section" id="beverages"></div>
+<div class="section" id="juices"></div>
+<div class="section" id="smoothies"></div>
+<div class="section" id="softdrinks"></div>
+<div class="section" id="sandwiches"></div>
+<div class="section" id="breakfast"></div>
+<div class="section" id="salads"></div>
+<div class="section" id="fastfood"></div>
+<div class="section" id="icecream"></div>
+
+<script>
+const menuData = {
+  coffee:[
+    {name:"Ελληνικός", price:"—"}, {name:"Ελληνικός Διπλός", price:"—"}, {name:"Nes Café / Φραπέ", price:"—"},
+    {name:"Macchiato", price:"—"}, {name:"Espresso", price:"—"}, {name:"Espresso Διπλός", price:"—"},
+    {name:"Americano", price:"—"}, {name:"Φρέντο Εσπρέσο", price:"—"}, {name:"Καπουτσίνο", price:"—"}, {name:"Latte", price:"—"}
+  ],
+  beverages:[
+    {name:"Σοκολάτα Ζεστή/Κρύα", price:"—"}, {name:"Σοκολάτα Βιενουά", price:"—"}, {name:"Σοκολάτα Λευκή", price:"—"},
+    {name:"Κακάο", price:"—"}, {name:"Τσάι Πράσινο", price:"—"}, {name:"Τσάι Λεμόνι", price:"—"}, {name:"Τσάι Ροδάκινο", price:"—"},
+    {name:"Ice Tea Λεμόνι", price:"—"}, {name:"Ice Tea Ροδάκινο", price:"—"}, {name:"Χαμομήλι", price:"—"}
+  ],
+  juices:[
+    {name:"Φρέσκος χυμός πορτοκάλι", price:"—"}, {name:"Φρέσκος χυμός ανάμικτος", price:"—"},
+    {name:"Φρέσκοι χυμοί συσκευασίας", price:"—"}, {name:"Σπιτική λεμονάδα", price:"—"}, {name:"Διάφοροι χυμοί απλοί", price:"—"}
+  ],
+  smoothies:[
+    {name:"Strawberry Split", price:"—"}, {name:"Pineapple Sunrise", price:"—"}, {name:"Raspberry Passion", price:"—"},
+    {name:"Kiwi Cooler", price:"—"}, {name:"Tropi Colada", price:"—"}, {name:"Veggie Fusion", price:"—"}
+  ],
+  softdrinks:[
+    {name:"Coca Cola", price:"—"}, {name:"Coca Cola Light", price:"—"}, {name:"Coca Cola Zero", price:"—"},
+    {name:"Sprite", price:"—"}, {name:"Πορτοκαλάδα", price:"—"}, {name:"Λεμονάδα", price:"—"},
+    {name:"Σόδα", price:"—"}, {name:"Τόνικ", price:"—"}, {name:"Νερό μικρό 330 ml", price:"—"}, {name:"Ενεργειακά ποτά", price:"—"}
+  ],
+  sandwiches:[
+    {name:"Μπαγκέτα απλή", price:"3.00€"}, {name:"Μπαγκέτα κοτόπουλο", price:"4.00€"}, {name:"Toast", price:"2.50€"}
+  ],
+  breakfast:[
+    {name:"Κροκ Μαντάμ", price:"8.00€"}, {name:"Αγγλικό", price:"13.00€"}, {name:"Ελληνικό", price:"10.00€"}, {name:"Ομελέτα", price:"6.00€"}
+  ],
+  salads:[
+    {name:"Χωριάτικη", price:"8.00€"}, {name:"Ντάκος", price:"8.00€"}, {name:"Σίζαρ", price:"8.00€"}
+  ],
+  fastfood:[
+    {name:"Burger", price:"8.00€"}, {name:"Chicken nuggets", price:"8.50€"}, {name:"Club Sandwich", price:"7.00€"},
+    {name:"Edelweiss Hot Dog", price:"7.00€"}, {name:"Pizza Margherita 26cm", price:"8.00€"}, {name:"Pizza Margherita 30cm", price:"10.00€"}
+  ],
+  icecream:Array.from({length:10},(_,i)=>({name:"Γεύση "+(i+1), price:"—"}))
+};
+
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  const sec=document.getElementById(id);
+  sec.innerHTML=menuData[id].map(item=>`<div class="item"><span>${item.name}</span><span class="price">${item.price}</span></div>`).join('');
+  sec.style.display='block';
+}
+
+// αρχικά εμφανίζουμε Καφέδες
+showSection('coffee');
+</script>
+</body>
+</html>
