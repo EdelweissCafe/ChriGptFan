@@ -1,1 +1,12 @@
-
+{
+  "coffee": { "GR":[{"name":"Ελληνικός","price":"2.50€","img":"images/A1.jpg"}], "EN":[{"name":"Greek Coffee","price":"2.50€","img":"images/A1.jpg"}] },
+  "beverages": { "GR":[],"EN":[] },
+  "juices": { "GR":[],"EN":[] },
+  "smoothies": { "GR":[],"EN":[] },
+  "softdrinks": { "GR":[],"EN":[] },
+  "sandwiches": { "GR":[],"EN":[] },
+  "breakfast": { "GR":[],"EN":[] },
+  "salads": { "GR":[],"EN":[] },
+  "fastfood": { "GR":[],"EN":[] },
+  "icecream": { "GR":[],"EN":[] }
+}
