@@ -240,6 +240,167 @@ addProdBtn.addEventListener('click',()=>{
   populateTable(); showSection(sec);
 });
 </script>
+<script>
+// === CONFIG ===
+const GITHUB_REPO_OWNER = "edelweisscafe"; // GitHub username
+const GITHUB_REPO_NAME = "ChriGptFan"; // repository
+const GITHUB_FILE_PATH = "menuData.json"; // path στο repo
+const GITHUB_BRANCH = "main"; // branch
+const GITHUB_TOKEN = "PASTE_YOUR_PERSONAL_ACCESS_TOKEN_HERE"; // token για write access
 
+// === MENU DATA LOAD ===
+let menuData = {};
+let currentLanguage = 'GR';
+let currentSha = '';
+
+async function loadMenuData() {
+  try {
+    const url = `https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}?ref=${GITHUB_BRANCH}`;
+    const response = await fetch(url);
+    const data = await response.json();
+    currentSha = data.sha;
+    const content = atob(data.content.replace(/\n/g, ''));
+    menuData = JSON.parse(content);
+    showSection('coffee');
+  } catch(e) { console.error("Load menuData failed", e); }
+}
+loadMenuData();
+
+// === SHOW SECTION ===
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.style.display='none');
+  const sec = document.getElementById(id);
+  let items = menuData[id][currentLanguage] || [];
+  sec.innerHTML = items.map(item => `
+    <div class="item" style="display:flex; align-items:center; margin-bottom:5px;">
+      ${item.img ? `<img src="${item.img}?v=${Date.now()}" style="width:50px; height:50px; object-fit:cover; margin-right:10px; border-radius:5px;">` : ''}
+      <span style="flex:1;">${item.name}</span>
+      <span class="price">${item.price}</span>
+    </div>
+  `).join('');
+  sec.style.display='block';
+}
+
+document.getElementById('langSelect').addEventListener('change', () => {
+  currentLanguage = document.getElementById('langSelect').value;
+  showSection('coffee');
+});
+
+// === ADMIN MODAL ===
+let logoClicks = 0;
+const logo = document.getElementById('logo');
+const adminModal = document.getElementById('adminModal');
+const adminSectionSelect = document.getElementById('adminSectionSelect');
+const adminLangSelect = document.getElementById('adminLangSelect');
+const adminTableBody = document.querySelector('#adminTable tbody');
+const addProdBtn = document.getElementById('addProdBtn');
+const newProdName = document.getElementById('newProdName');
+const newProdPrice = document.getElementById('newProdPrice');
+const newProdImg = document.getElementById('newProdImg');
+let currentAdminLang = 'GR';
+
+logo.addEventListener('click', () => {
+  logoClicks++;
+  if(logoClicks>=5){
+    logoClicks = 0;
+    const code = prompt("Εισάγετε τον κωδικό admin:");
+    if(code==='1234'){ adminModal.style.display='block'; populateSectionSelect(); populateTable(); }
+    else alert("Λανθασμένος κωδικός!");
+  }
+});
+document.getElementById('closeAdmin').addEventListener('click',()=>{adminModal.style.display='none';});
+
+// Populate sections
+function populateSectionSelect(){
+  adminSectionSelect.innerHTML = '';
+  Object.keys(menuData).forEach(sec => {
+    const opt = document.createElement('option'); opt.value = sec; opt.text = sec.toUpperCase();
+    adminSectionSelect.appendChild(opt);
+  });
+}
+
+// Populate table
+function populateTable(){
+  const sec = adminSectionSelect.value;
+  currentAdminLang = adminLangSelect.value;
+  adminTableBody.innerHTML = '';
+  let items = menuData[sec][currentAdminLang] || [];
+  items.forEach((item,i)=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `<td contenteditable="true" oninput="updateItem('${sec}',${i},'name',this.innerText)">${item.name}</td>
+                     <td contenteditable="true" oninput="updateItem('${sec}',${i},'price',this.innerText)">${item.price}</td>
+                     <td contenteditable="true" oninput="updateItem('${sec}',${i},'img',this.innerText)">${item.img||''}</td>
+                     <td><button onclick="deleteItem('${sec}',${i})">Διαγραφή</button></td>`;
+    adminTableBody.appendChild(row);
+  });
+}
+
+// Event listeners
+adminSectionSelect.addEventListener('change', populateTable);
+adminLangSelect.addEventListener('change', populateTable);
+
+// === UPDATE FUNCTIONS ===
+window.updateItem = function(sec,i,key,value){
+  menuData[sec][currentAdminLang][i][key] = value;
+  if(key==='price' || key==='img'){
+    Object.keys(menuData[sec]).forEach(lang=>{
+      if(lang!==currentAdminLang) menuData[sec][lang][i][key] = value;
+    });
+  }
+  pushToGitHub();
+  showSection(sec);
+}
+
+window.deleteItem = function(sec,i){
+  Object.keys(menuData[sec]).forEach(lang=>{
+    menuData[sec][lang].splice(i,1);
+  });
+  pushToGitHub();
+  populateTable(); showSection(sec);
+}
+
+addProdBtn.addEventListener('click',()=>{
+  const sec = adminSectionSelect.value;
+  const name = newProdName.value.trim();
+  const price = newProdPrice.value.trim() || '—';
+  const img = newProdImg.value.trim() || '';
+  if(name===''){ alert("Γράψε όνομα προϊόντος"); return; }
+
+  Object.keys(menuData[sec]).forEach(lang=>{
+    if(!menuData[sec][lang]) menuData[sec][lang] = [];
+    menuData[sec][lang].push({name: lang===currentAdminLang?name:'', price, img});
+  });
+
+  newProdName.value=''; newProdPrice.value=''; newProdImg.value='';
+  pushToGitHub();
+  populateTable(); showSection(sec);
+});
+
+// === PUSH TO GITHUB ===
+async function pushToGitHub(){
+  try{
+    const resp = await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}?ref=${GITHUB_BRANCH}`);
+    const data = await resp.json();
+    if(!currentSha) currentSha = data.sha;
+
+    await fetch(`https://api.github.com/repos/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}/contents/${GITHUB_FILE_PATH}`,{
+      method:'PUT',
+      headers:{
+        "Authorization": `token ${GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github.v3+json"
+      },
+      body: JSON.stringify({
+        message: "Update menuData via admin modal",
+        content: btoa(JSON.stringify(menuData,null,2)),
+        branch: GITHUB_BRANCH,
+        sha: currentSha
+      })
+    }).then(res=>res.json()).then(res=>{
+      if(res.content) currentSha=res.content.sha;
+      console.log("menuData updated on GitHub");
+    });
+  }catch(e){console.error("GitHub update failed",e);}
+}
+    </script>
 </body>
 </html>
